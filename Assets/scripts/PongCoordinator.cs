@@ -60,8 +60,10 @@ public class PongCoordinator : MonoBehaviour {
 
         Hashtable jsonhash = (Hashtable)JSONParsed;
         string msgType = (string) jsonhash[TYPE_TYPE];
+        Debug.Log("PongCoordinator received msg='" + msgType + "'");
         if (msgType.Equals(TYPE_JOIN))
         {
+            Debug.Log("PongCoordinator about to handle player join");
             ReceivePlayerJoined(jsonhash);
             return true;
         }
@@ -129,10 +131,9 @@ public class PongCoordinator : MonoBehaviour {
         }
 
         pongWebSockets = new PongWebSockets();
+        pongWebSockets.wsMessageArrived += PongWebSockets_wsMessageArrived;
 
     }
-
-
 
     #region utilities
 
