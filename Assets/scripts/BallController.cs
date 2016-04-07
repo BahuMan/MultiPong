@@ -21,7 +21,7 @@ public class BallController : MonoBehaviour {
 
     void OnCollisionExit(Collision coll)
     {
-        Debug.Log("boing - resetting speed");
+        //Debug.Log("boing - resetting speed");
         ball.velocity = ball.velocity.normalized * speed;
     }
 }

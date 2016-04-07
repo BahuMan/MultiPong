@@ -1145,6 +1145,7 @@ namespace WebSocketSharp.Net
       return vals != null && vals.Length > 0 ? vals : null;
     }
 
+#pragma warning disable CS0618 // Type or member is obsolete
     /// <summary>
     /// Populates the specified <see cref="SerializationInfo"/> with the data needed to serialize
     /// the <see cref="WebHeaderCollection"/>.
@@ -1159,6 +1160,7 @@ namespace WebSocketSharp.Net
     /// <paramref name="serializationInfo"/> is <see langword="null"/>.
     /// </exception>
     [SecurityPermission (
+#pragma warning restore CS0618 // Type or member is obsolete
       SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
     public override void GetObjectData (
       SerializationInfo serializationInfo, StreamingContext streamingContext)
