@@ -9,7 +9,7 @@ A "ball" (I used a cube in order to have interesting collisions) is launched and
 
 ### Todo
 
-* create player paddels
-* create goals (player loses if the ball touches "their" goal)
 * option to host or join game
+* listen to "player joined" events
+* based on #players joined, create playing field dynamically and assign player positions
 * sync positions over GoE protocol
