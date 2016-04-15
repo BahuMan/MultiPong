@@ -20,6 +20,9 @@ public class MenuController : MonoBehaviour {
         GameObject PongController = GameObject.FindGameObjectWithTag("GameController");
         coordinator = PongController.GetComponent<PongCoordinator>();
 
+        addressInput.text = "ws://" + Network.player.ipAddress + ":8080";
+
+
     }
 
     public bool menuVisible { get; private set; }
@@ -42,6 +45,7 @@ public class MenuController : MonoBehaviour {
         if (joinOrHostDropDown.text.Equals("Join Remote Server"))
         {
             Debug.Log("join game selected");
+            hosting = false;
             if (previousAddress != null)
             {
                 addressInput.text = previousAddress;
@@ -50,6 +54,7 @@ public class MenuController : MonoBehaviour {
         else
         {
             Debug.Log("Local hosting selected");
+            hosting = true;
             previousAddress = addressInput.text;
             addressInput.text = "local IP = " + Network.player.ipAddress;
         }

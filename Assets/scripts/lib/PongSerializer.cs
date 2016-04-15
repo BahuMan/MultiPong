@@ -20,6 +20,16 @@ class PongSerializer
         return sb.ToString();
     }
 
+    private static string forVector(Vector3 v)
+    {
+        return "{\"x\":" + v.x * 100f + ", \"y\":" + v.z * 100f + "}";
+    }
+
+    private static StringBuilder forVector(StringBuilder sb, Vector3 v)
+    {
+        return sb.Append("{\"x\":").Append(v.x * 100f).Append(", \"y\":").Append(v.z * 100f).Append("}");
+    }
+
     /**
         * generates a JSON string in the form specified by https://github.com/Squarific/Game-Of-Everything/wiki/protocol-chat
         *
@@ -33,5 +43,10 @@ class PongSerializer
     public static string forPlayerJoin(string name)
     {
         return "{\"type\":\"" + PongCoordinator.TYPE_JOIN + "\", \"" + PongPlayer.FIELD_PLAYERID + "\":\"" + name + "\"}";
+    }
+
+    public static string forWall(GameObject wall, Vector3 start, Vector3 end)
+    {
+        return "{\"type\":\"" + PongCoordinator.TYPE_WALL + "\"}";
     }
 }

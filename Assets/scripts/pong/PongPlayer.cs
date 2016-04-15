@@ -11,6 +11,7 @@ public class PongPlayer
     public Vector2 goalRight;
     public float length;
     public float height;
+    public GameObject paddle;
 
     public const string FIELD_PLAYERID = "PlayerID";
     public const string FIELD_GOALLEFT = "GoalLeft";
