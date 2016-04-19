@@ -21,6 +21,7 @@ public class PongCoordinator : MonoBehaviour {
     public const string TYPE_JOIN = "PlayerJoined";
     public const string TYPE_CHAT = "chat";
     public const string TYPE_WALL = "createWall";
+    public const string TYPE_SETUP_GAME = "setupGame";
 
     public enum CoordinatorStatus { INIT, HOSTING_WAITING_FOR_PLAYERS, JOINING, HOSTING_STARTING, HOSTING_PLAYING, JOINED_STARTING, JOINED_PLAYING };
 
@@ -28,6 +29,7 @@ public class PongCoordinator : MonoBehaviour {
     private PongWebSockets pongWebSockets;
 
     private Dictionary<string, PongPlayer> playerInfo;
+    private PongPlayer localPlayer = null;
     #endregion
 
     /**
@@ -86,10 +88,8 @@ public class PongCoordinator : MonoBehaviour {
     private void ReceivePlayerJoined(Hashtable parsedPlayer)
     {
 
-        //construct a place-holder player info. THe coordinates and other details will be communicated by the host (later)
-        PongPlayer playa = new PongPlayer((string) parsedPlayer[PongPlayer.FIELD_PLAYERID]);
-        playa.paddle = Instantiate(this.PrefabPadle);
-        playa.paddle.name = playa.playerid;
+        //construct a place-holder player info. The coordinates and other details will be communicated by the host (later)
+        PongPlayer playa = new PongPlayer((string)parsedPlayer[PongPlayer.FIELD_PLAYERID]);
 
         Debug.Log("player joined: " + playa.playerid);
         if (status == CoordinatorStatus.HOSTING_PLAYING)
@@ -104,6 +104,7 @@ public class PongCoordinator : MonoBehaviour {
                 status = CoordinatorStatus.JOINED_STARTING;
             }
             //@TODO: bind this player's paddle to local keys
+            localPlayer = playa;
         }
         playerInfo.Add(playa.playerid, playa);
         Debug.Log("Total #players joined: " + playerInfo.Count);
@@ -201,6 +202,7 @@ public class PongCoordinator : MonoBehaviour {
 
         //@TODO: initialize & position balls & players
         this.ball.name = "PongTestBall";
+        this.localPlayer.paddle = Instantiate<GameObject>(PrefabPadle);
 
         for (int i = 0; i < points.Length - 2; i += 2)
         {

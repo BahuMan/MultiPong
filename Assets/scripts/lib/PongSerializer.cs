@@ -12,8 +12,11 @@ class PongSerializer
     {
         StringBuilder sb = new StringBuilder();
         sb.Append("{ \"type\":\"move\", \"id\":\"").Append(go.name).Append("\", ");
-        sb.Append("\"position\":{\"x\":").Append(go.transform.position.x*100f).Append(", \"y\":").Append(-go.transform.position.z*100f).Append("}, ");
+        //sb.Append("\"position\":{\"x\":").Append(go.transform.position.x*100f).Append(", \"y\":").Append(-go.transform.position.z*100f).Append("}, ");
+        sb.Append("\"position\":"); forVector(sb, go.transform.position).Append(", ");
         sb.Append("\"rotation\":{\"z\":").Append(go.transform.rotation.eulerAngles.y).Append("}");
+
+        sb.Append("\"position\":{\"x\":").Append(go.transform.position.x * 100f).Append(", \"y\":").Append(-go.transform.position.z * 100f).Append("}, ");
 
         sb.Append("}");
 
