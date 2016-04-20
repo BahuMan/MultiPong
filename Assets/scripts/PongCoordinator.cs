@@ -88,6 +88,16 @@ public class PongCoordinator : MonoBehaviour {
     private void ReceivePlayerJoined(Hashtable parsedPlayer)
     {
 
+        //this message is only for the server, quit in every other status
+        if (status == CoordinatorStatus.HOSTING_STARTING)
+        {
+            host_ReceivePlayerJoined(parsedPlayer);
+        }
+
+    }
+
+    private void host_ReceivePlayerJoined(Hashtable parsedPlayer)
+    {
         //construct a place-holder player info. The coordinates and other details will be communicated by the host (later)
         PongPlayer playa = new PongPlayer((string)parsedPlayer[PongPlayer.FIELD_PLAYERID]);
 
@@ -108,6 +118,7 @@ public class PongCoordinator : MonoBehaviour {
         }
         playerInfo.Add(playa.playerid, playa);
         Debug.Log("Total #players joined: " + playerInfo.Count);
+
     }
 
     private void SendPlayerJoin(string playerid)
@@ -159,16 +170,14 @@ public class PongCoordinator : MonoBehaviour {
     {
         if (status == CoordinatorStatus.HOSTING_PLAYING)
         {
-            UpdateHostPlaying();
+            //disable temporarily to allow debugging of the JSON messages during playfield setup
+            //UpdateHostPlaying();
         }
         else if (status == CoordinatorStatus.HOSTING_WAITING_FOR_PLAYERS)
         {
             UpdateHostWaiting();
         }
-        else if (status == CoordinatorStatus.HOSTING_PLAYING)
-        {
-            UpdateHostPlaying();
-        }
+
     }
 
     private void UpdateHostPlaying()
