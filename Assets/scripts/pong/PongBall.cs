@@ -6,8 +6,8 @@ using System.Text;
 public class PongBall
 {
     public string ballid;
-    public Vector2 position;
-    public Vector2 velocity;
+    public Vector3 position;
+    public Vector3 velocity;
     public float diameter;
 
     public const string FIELD_BALLID = "BallID";
@@ -23,10 +23,15 @@ public class PongBall
     public PongBall(Hashtable BallInfo)
     {
         ballid = (string)BallInfo[FIELD_BALLID];
+
         Hashtable vect = (Hashtable)BallInfo[FIELD_POSITION];
-        position = new Vector2(Convert.ToSingle((double)vect["x"]), Convert.ToSingle((double)vect["y"]));
+        position = PongSerializer.toVector(vect);
+        //position = new Vector2(Convert.ToSingle((double)vect["x"]), Convert.ToSingle((double)vect["y"]));
+
         vect = (Hashtable)BallInfo[FIELD_VELOCITY];
-        velocity = new Vector2(Convert.ToSingle((double)vect["x"]), Convert.ToSingle((double)vect["y"]));
+        velocity = PongSerializer.toVector(vect);
+        //velocity = new Vector2(Convert.ToSingle((double)vect["x"]), Convert.ToSingle((double)vect["y"]));
+
         diameter = Convert.ToSingle((double)BallInfo[FIELD_DIAMETER]);
     }
 
@@ -35,12 +40,14 @@ public class PongBall
         StringBuilder sb = new StringBuilder();
         sb.Append("{");
         sb.Append("\"").Append(FIELD_BALLID).Append("\": \"").Append(ballid).Append("\"");
-        sb.Append("\"").Append(FIELD_POSITION).Append("\": {");
-        sb.Append("\"x\": ").Append(position.x).Append(",");
-        sb.Append("\"y\": ").Append(position.y).Append("}");
-        sb.Append("\"").Append(FIELD_VELOCITY).Append("\": {");
-        sb.Append("\"x\": ").Append(velocity.x).Append(",");
-        sb.Append("\"y\": ").Append(velocity.y).Append("}");
+        sb.Append("\"").Append(FIELD_POSITION).Append("\":");
+            PongSerializer.forVector(sb, position);
+            //sb.Append("{\"x\": ").Append(position.x).Append(",");
+            //sb.Append("\"y\": ").Append(position.y).Append("}");
+        sb.Append("\"").Append(FIELD_VELOCITY).Append("\":");
+            PongSerializer.forVector(sb, velocity);
+            //sb.Append("{\"x\": ").Append(velocity.x).Append(",");
+            //sb.Append("\"y\": ").Append(velocity.y).Append("}");
         sb.Append("\"").Append(FIELD_DIAMETER).Append("\": ").Append(diameter).Append(",");
         sb.Append("}");
 

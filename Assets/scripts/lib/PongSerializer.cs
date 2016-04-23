@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 
 class PongSerializer
 {
+    public const float SCALE = 100f;
     /**
         * takes name, position and rotation and converts it to a json message. Because in unity, the up-vector is "y", I'm taking (x,z) as 2D-coordinates.
         * So where a 2D system expects the "y" coordinate, I'm filling in the "z" coordinate.
@@ -12,25 +15,31 @@ class PongSerializer
     {
         StringBuilder sb = new StringBuilder();
         sb.Append("{ \"type\":\"move\", \"id\":\"").Append(go.name).Append("\", ");
-        //sb.Append("\"position\":{\"x\":").Append(go.transform.position.x*100f).Append(", \"y\":").Append(-go.transform.position.z*100f).Append("}, ");
+        //sb.Append("\"position\":{\"x\":").Append(go.transform.position.x*scale).Append(", \"y\":").Append(-go.transform.position.z*scale).Append("}, ");
         sb.Append("\"position\":"); forVector(sb, go.transform.position).Append(", ");
         sb.Append("\"rotation\":{\"z\":").Append(go.transform.rotation.eulerAngles.y).Append("}");
 
-        sb.Append("\"position\":{\"x\":").Append(go.transform.position.x * 100f).Append(", \"y\":").Append(-go.transform.position.z * 100f).Append("}, ");
+        sb.Append("\"position\":{\"x\":").Append(go.transform.position.x * SCALE).Append(", \"y\":").Append(-go.transform.position.z * SCALE).Append("}, ");
 
         sb.Append("}");
 
         return sb.ToString();
     }
 
-    private static string forVector(Vector3 v)
+    public static string forVector(Vector3 v)
     {
-        return "{\"x\":" + v.x * 100f + ", \"y\":" + v.z * 100f + "}";
+        StringBuilder sb = new StringBuilder();
+        return forVector(sb, v).ToString();
     }
 
-    private static StringBuilder forVector(StringBuilder sb, Vector3 v)
+    public static StringBuilder forVector(StringBuilder sb, Vector3 v)
     {
-        return sb.Append("{\"x\":").Append(v.x * 100f).Append(", \"y\":").Append(v.z * 100f).Append("}");
+        return sb.Append("{\"x\":").Append(v.x * SCALE).Append(", \"y\":").Append(v.z * SCALE).Append("}");
+    }
+
+    public static Vector3 toVector(Hashtable vect)
+    {
+        return new Vector3(Convert.ToSingle((double)vect["x"] / SCALE), 0.0f, Convert.ToSingle((double)vect["y"] / SCALE));
     }
 
     /**
@@ -51,5 +60,23 @@ class PongSerializer
     public static string forWall(GameObject wall, Vector3 start, Vector3 end)
     {
         return "{\"type\":\"" + PongCoordinator.TYPE_WALL + "\"}";
+    }
+
+    public static string forGameSetup(Dictionary<string, PongPlayer> playerInfo)
+    {
+        StringBuilder sb = new StringBuilder("{\"type\":\"").Append(PongCoordinator.TYPE_SETUP_GAME).Append("\", ");
+        sb.Append("\"").Append(PongPlayer.ARRAY_PLAYERS).Append("\":[");
+        foreach (PongPlayer p in playerInfo.Values)
+        {
+            sb.AppendLine();
+            sb.Append("{\"").Append(PongPlayer.FIELD_PLAYERID).Append("\":\"").Append(p.playerid).Append("\", \"");
+            sb.Append(PongPlayer.FIELD_GOALLEFT).Append("\":"); forVector(sb, p.goalLeft).Append(", \"");
+            sb.Append(PongPlayer.FIELD_GOALRIGHT).Append("\":"); forVector(sb, p.goalRight).Append(", \"");
+            sb.Append(PongPlayer.FIELD_PADDLEHEIGHT).Append("\":").Append(p.height).Append(", \"");
+            sb.Append(PongPlayer.FIELD_PADDLELENGTH).Append("\":").Append(p.length).Append("}");
+        }
+        sb.Append("]");
+        sb.Append("}");
+        return sb.ToString();
     }
 }

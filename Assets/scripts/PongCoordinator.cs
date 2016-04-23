@@ -8,7 +8,6 @@ public class PongCoordinator : MonoBehaviour {
 
     public string localPlayerName = "Bart Huylebroeck";
     public string ServerURL = "ws://localhost:8080";
-    public int numPlayers = 5;
     public float radius = 20f;
 
     public ChatWindowController chatWindowController;
@@ -17,19 +16,23 @@ public class PongCoordinator : MonoBehaviour {
     public GameObject PrefabPadle;
     public Rigidbody ball;
 
+    public const float PADDLE_LENGTH = 3.0f;
+    public const float PADDLE_HEIGHT = 1.0f;
+
     public const string TYPE_TYPE = "type";
     public const string TYPE_JOIN = "PlayerJoined";
     public const string TYPE_CHAT = "chat";
     public const string TYPE_WALL = "createWall";
     public const string TYPE_SETUP_GAME = "setupGame";
 
-    public enum CoordinatorStatus { INIT, HOSTING_WAITING_FOR_PLAYERS, JOINING, HOSTING_STARTING, HOSTING_PLAYING, JOINED_STARTING, JOINED_PLAYING };
+    public enum CoordinatorStatus { INIT, HOSTING_WAITING_FOR_PLAYERS, JOINING, HOSTING_STARTING, HOSTING_PLAYING, JOINED_WAITING, JOINED_STARTING, JOINED_PLAYING };
 
     public CoordinatorStatus status = CoordinatorStatus.INIT;
     private PongWebSockets pongWebSockets;
 
     private Dictionary<string, PongPlayer> playerInfo;
     private PongPlayer localPlayer = null;
+    private Hashtable parsedGameSetup;
     #endregion
 
     /**
@@ -55,7 +58,7 @@ public class PongCoordinator : MonoBehaviour {
     public void JoinGame(string url)
     {
         Debug.Log("Coordinator joining game");
-        status = CoordinatorStatus.JOINED_STARTING;
+        status = CoordinatorStatus.JOINED_WAITING;
         playerInfo = new Dictionary<string, PongPlayer>();
         pongWebSockets.Reconnect(url);
         SendPlayerJoin(localPlayerName);
@@ -82,22 +85,16 @@ public class PongCoordinator : MonoBehaviour {
             ReceiveChatMessage(jsonhash);
             return true;
         }
+        else if (msgType.Equals(TYPE_SETUP_GAME))
+        {
+            return ReceiveGameSetup(jsonhash);
+        }
         return false;
     }
 
     private void ReceivePlayerJoined(Hashtable parsedPlayer)
     {
 
-        //this message is only for the server, quit in every other status
-        if (status == CoordinatorStatus.HOSTING_STARTING)
-        {
-            host_ReceivePlayerJoined(parsedPlayer);
-        }
-
-    }
-
-    private void host_ReceivePlayerJoined(Hashtable parsedPlayer)
-    {
         //construct a place-holder player info. The coordinates and other details will be communicated by the host (later)
         PongPlayer playa = new PongPlayer((string)parsedPlayer[PongPlayer.FIELD_PLAYERID]);
 
@@ -114,6 +111,7 @@ public class PongCoordinator : MonoBehaviour {
                 status = CoordinatorStatus.JOINED_STARTING;
             }
             //@TODO: bind this player's paddle to local keys
+            //CORRECTION: binding should only happen during setup of the game (when host is building playfield)
             localPlayer = playa;
         }
         playerInfo.Add(playa.playerid, playa);
@@ -123,7 +121,36 @@ public class PongCoordinator : MonoBehaviour {
 
     private void SendPlayerJoin(string playerid)
     {
+        //this is used by host and players to make themselves known.
         pongWebSockets.wsMessage(PongSerializer.forPlayerJoin(playerid));
+    }
+
+    private void SendGameSetup(Dictionary<string, PongPlayer> players)
+    {
+        //this is used by host and players to make themselves known.
+        pongWebSockets.wsMessage(PongSerializer.forGameSetup(players));
+    }
+
+    private bool ReceiveGameSetup(Hashtable parsed)
+    {
+        if (status == CoordinatorStatus.HOSTING_PLAYING)
+        {
+            Debug.Log("PongCoordinator received echo of my own GameSetup -- ignoring. (it's all good)");
+            return true;
+        }
+
+        if (status == CoordinatorStatus.JOINED_PLAYING || status == CoordinatorStatus.JOINED_WAITING)
+        {
+            //since I can't create unity objects outside the FixedUpdate() method,
+            //I'm simply setting the status and storing the parsedGameSetup;
+            //it will be used in UpdateJoinedStarting()
+            this.parsedGameSetup = parsed;
+            status = CoordinatorStatus.JOINED_STARTING;
+            return true;
+        }
+
+        Debug.LogError("PongCoordinator should not be in status '" + status + "' when receiving gamesetup message");
+        return false;
     }
 
     /**
@@ -177,6 +204,49 @@ public class PongCoordinator : MonoBehaviour {
         {
             UpdateHostWaiting();
         }
+        else if (status == CoordinatorStatus.JOINED_STARTING)
+        {
+            UpdateJoinedStarting();
+        }
+        else if (status == CoordinatorStatus.JOINED_PLAYING)
+        {
+            UpdateJoinedPlaying();
+        }
+
+    }
+
+    private void UpdateJoinedStarting()
+    {
+        //we're starting a new game
+        this.playerInfo.Clear(); //@TODO: destroy gameobject paddles from previous game
+        ArrayList players = (ArrayList)parsedGameSetup[PongPlayer.ARRAY_PLAYERS];
+        PongPlayer previousPlayer = null;
+        for (int p = 0; p < players.Count; ++p)
+        {
+            PongPlayer newPlayer = new PongPlayer((Hashtable)players[p]);
+            newPlayer.paddle = Instantiate<GameObject>(PrefabPadle);
+            //@TODO: for local paddle, bind keys to the newly instantiated paddle
+            this.playerInfo.Add(newPlayer.playerid, newPlayer);
+
+            //now create the walls & goals:
+            GameObject newObj = Instantiate<GameObject>(PrefabGoal);
+            createWall(newObj, newPlayer.goalLeft, newPlayer.goalRight);
+            if (previousPlayer != null)
+            {
+                newObj = Instantiate<GameObject>(PrefabWall);
+                createWall(newObj, previousPlayer.goalRight, newPlayer.goalLeft);
+            }
+
+        }
+
+        //some ugly shenanigans to create the last wall
+
+        //next frame, we can start playing!
+        status = CoordinatorStatus.JOINED_PLAYING;
+    }
+
+    private void UpdateJoinedPlaying()
+    {
 
     }
 
@@ -206,15 +276,31 @@ public class PongCoordinator : MonoBehaviour {
     private void StartNewGame()
     {
         Debug.Log("initializing playfield");
-        Vector3[] points = CreateEllipse(radius, radius, new Vector3(0f, 0f, 0f), numPlayers * 2);
+        Vector3[] points = CreateEllipse(radius, radius, new Vector3(0f, 0f, 0f), this.playerInfo.Count * 2);
         GameObject newObj;
 
         //@TODO: initialize & position balls & players
         this.ball.name = "PongTestBall";
-        this.localPlayer.paddle = Instantiate<GameObject>(PrefabPadle);
+        //this.localPlayer.paddle = Instantiate<GameObject>(PrefabPadle);
 
+        var playerEnum = this.playerInfo.GetEnumerator();
         for (int i = 0; i < points.Length - 2; i += 2)
         {
+            if (playerEnum.MoveNext())
+            {
+                var p = playerEnum.Current.Value;
+                p.goalLeft = points[i];
+                p.goalRight = points[i + 1];
+                p.height = PADDLE_HEIGHT;
+                p.length = PADDLE_LENGTH;
+                p.paddle = Instantiate<GameObject>(PrefabPadle);
+            }
+            else
+            {
+                Debug.LogError("mismatch between playfield size(" + (points.Length/2) + ") and playercount(" + this.playerInfo.Count + ")");
+            }
+
+            //@TODO: should this stay here, or move to the corresponding receiveGameSetup? The server may not see its own gamesetup message
             newObj = Instantiate<GameObject>(PrefabGoal);
             createWall(newObj, points[i], points[i + 1]);
             newObj = Instantiate<GameObject>(PrefabWall);
@@ -223,6 +309,7 @@ public class PongCoordinator : MonoBehaviour {
 
         this.ball.transform.position = new Vector3(0.0f, 0.0f, 1.0f);
 
+        SendGameSetup(this.playerInfo);
         status = CoordinatorStatus.HOSTING_PLAYING;
     }
 

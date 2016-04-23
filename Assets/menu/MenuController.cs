@@ -46,17 +46,17 @@ public class MenuController : MonoBehaviour {
         {
             Debug.Log("join game selected");
             hosting = false;
-            if (previousAddress != null)
-            {
-                addressInput.text = previousAddress;
-            }
+            //if (previousAddress != null)
+            //{
+            //    addressInput.text = previousAddress;
+            //}
         }
         else
         {
             Debug.Log("Local hosting selected");
             hosting = true;
-            previousAddress = addressInput.text;
-            addressInput.text = "local IP = " + Network.player.ipAddress;
+            //previousAddress = addressInput.text;
+            //addressInput.text = "local IP = " + Network.player.ipAddress;
         }
     }
 
