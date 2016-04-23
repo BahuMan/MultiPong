@@ -231,12 +231,13 @@ public class PongCoordinator : MonoBehaviour {
             //now create the walls & goals:
             GameObject newObj = Instantiate<GameObject>(PrefabGoal);
             createWall(newObj, newPlayer.goalLeft, newPlayer.goalRight);
+            newObj.name = "Goal for " + newPlayer.playerid;
             if (previousPlayer != null)
             {
                 newObj = Instantiate<GameObject>(PrefabWall);
                 createWall(newObj, previousPlayer.goalRight, newPlayer.goalLeft);
             }
-
+            previousPlayer = newPlayer;
         }
 
         //some ugly shenanigans to create the last wall
@@ -277,7 +278,8 @@ public class PongCoordinator : MonoBehaviour {
     {
         Debug.Log("initializing playfield");
         Vector3[] points = CreateEllipse(radius, radius, new Vector3(0f, 0f, 0f), this.playerInfo.Count * 2);
-        GameObject newObj;
+        GameObject wall;
+        GameObject goal;
 
         //@TODO: initialize & position balls & players
         this.ball.name = "PongTestBall";
@@ -286,6 +288,12 @@ public class PongCoordinator : MonoBehaviour {
         var playerEnum = this.playerInfo.GetEnumerator();
         for (int i = 0; i < points.Length - 2; i += 2)
         {
+            //@TODO: should this stay here, or move to the corresponding receiveGameSetup? The server may not see its own gamesetup message
+            wall = Instantiate<GameObject>(PrefabWall);
+            createWall(wall, points[i + 1], points[i + 2]);
+            goal = Instantiate<GameObject>(PrefabGoal);
+            createWall(goal, points[i], points[i + 1]);
+
             if (playerEnum.MoveNext())
             {
                 var p = playerEnum.Current.Value;
@@ -294,17 +302,13 @@ public class PongCoordinator : MonoBehaviour {
                 p.height = PADDLE_HEIGHT;
                 p.length = PADDLE_LENGTH;
                 p.paddle = Instantiate<GameObject>(PrefabPadle);
+                goal.name = p.playerid;
             }
             else
             {
                 Debug.LogError("mismatch between playfield size(" + (points.Length/2) + ") and playercount(" + this.playerInfo.Count + ")");
             }
 
-            //@TODO: should this stay here, or move to the corresponding receiveGameSetup? The server may not see its own gamesetup message
-            newObj = Instantiate<GameObject>(PrefabGoal);
-            createWall(newObj, points[i], points[i + 1]);
-            newObj = Instantiate<GameObject>(PrefabWall);
-            createWall(newObj, points[i + 1], points[i + 2]);
         }
 
         this.ball.transform.position = new Vector3(0.0f, 0.0f, 1.0f);
