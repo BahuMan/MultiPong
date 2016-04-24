@@ -9,7 +9,7 @@ A "ball" (I used a cube in order to have interesting collisions) is launched and
 
 ### Todo
 
-* option to host or join game
-* listen to "player joined" events
 * based on #players joined, create playing field dynamically and assign player positions
+* set rotation of paddle correctly
+* only our "own" paddle should listen to keyinput, all others should receive updates via GoE protocol
 * sync positions over GoE protocol
