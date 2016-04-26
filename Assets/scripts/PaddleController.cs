@@ -8,17 +8,14 @@ public class PaddleController : MonoBehaviour {
     public float movementSpeed;
     public bool listenToKeyboard = true;
 
-    private Vector3 movementUnit;
     //position is kept track of as a float between 0.0f(=left) to 1.0f(=right)
     private float curPos;
 
 	// Use this for initialization
 	void Start () {
-        movementUnit = right - left;
         //move paddle to the middle
-        transform.position = left + (movementUnit / 2f);
-        //@TODO: rotate & scale paddle
-        movementUnit.Normalize();
+        curPos = 0.5f;
+        transform.position = left + ((right - left) / 2f);
 	}
 	
 	// Update is called once per frame

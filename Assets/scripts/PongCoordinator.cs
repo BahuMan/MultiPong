@@ -16,6 +16,7 @@ public class PongCoordinator : MonoBehaviour {
     public GameObject PrefabPaddle;
     public Rigidbody ball;
 
+    public const float PADDLE_DISTANCE = 1.0f;
     public const float PADDLE_LENGTH = 3.0f;
     public const float PADDLE_HEIGHT = 1.0f;
 
@@ -57,7 +58,7 @@ public class PongCoordinator : MonoBehaviour {
      **/
     public void JoinGame(string url)
     {
-        Debug.Log("Coordinator joining game");
+        Debug.Log("joining game");
         status = CoordinatorStatus.JOINED_WAITING;
         playerInfo = new Dictionary<string, PongPlayer>();
         pongWebSockets.Reconnect(url);
@@ -75,8 +76,6 @@ public class PongCoordinator : MonoBehaviour {
         Debug.Log("PongCoordinator received msg='" + msgType + "'");
         if (msgType.Equals(TYPE_JOIN))
         {
-            Debug.Log("PongCoordinator about to handle player join");
-            Debug.Log(msg);
             ReceivePlayerJoined(jsonhash);
             return true;
         }
@@ -217,9 +216,6 @@ public class PongCoordinator : MonoBehaviour {
 
     private void UpdateJoinedStarting()
     {
-
-        GameObject newObj = null;
-
         //we're starting a new game
         this.playerInfo.Clear(); //@TODO: destroy gameobject paddles from previous game
         ArrayList players = (ArrayList)parsedGameSetup[PongPlayer.ARRAY_PLAYERS];
@@ -227,26 +223,28 @@ public class PongCoordinator : MonoBehaviour {
         for (int p = 0; p < players.Count; ++p)
         {
             PongPlayer newPlayer = new PongPlayer((Hashtable)players[p]);
-            newPlayer.paddle = CreatePaddle(newPlayer);
+            
+            //now create the walls & goals:
+            GameObject goal = Instantiate<GameObject>(PrefabGoal);
+            createWall(goal, newPlayer.goalLeft, newPlayer.goalRight);
+            goal.name = "Goal for " + newPlayer.playerid;
+
+            newPlayer.paddle = CreatePaddle("Paddle for " + newPlayer.playerid, goal.transform.rotation, newPlayer.playerLeft, newPlayer.playerRight);
             //@TODO: for local paddle, bind keys to the newly instantiated paddle
             this.playerInfo.Add(newPlayer.playerid, newPlayer);
-
-            //now create the walls & goals:
-            newObj = Instantiate<GameObject>(PrefabGoal);
-            createWall(newObj, newPlayer.goalLeft, newPlayer.goalRight);
-            newObj.name = "Goal for " + newPlayer.playerid;
             //@TODO: link goal to correct user, for points and awards
+
             if (previousPlayer != null)
             {
-                newObj = Instantiate<GameObject>(PrefabWall);
-                createWall(newObj, previousPlayer.goalRight, newPlayer.goalLeft);
+                GameObject wall = Instantiate<GameObject>(PrefabWall);
+                createWall(wall, previousPlayer.goalRight, newPlayer.goalLeft);
             }
             previousPlayer = newPlayer;
         }
 
-        //some ugly shenanigans to create the last wall
-        newObj = Instantiate<GameObject>(PrefabWall);
-        createWall(newObj, previousPlayer.goalRight, PongSerializer.toVector((Hashtable) ((Hashtable)players[0])[PongPlayer.FIELD_GOALLEFT]));
+        //some ugly shenanigans to create the last wall (between first and last player)
+        GameObject lastwall = Instantiate<GameObject>(PrefabWall);
+        createWall(lastwall, previousPlayer.goalRight, PongSerializer.toVector((Hashtable) ((Hashtable)players[0])[PongPlayer.FIELD_GOALLEFT]));
 
         //next frame, we can start playing!
         status = CoordinatorStatus.JOINED_PLAYING;
@@ -308,7 +306,9 @@ public class PongCoordinator : MonoBehaviour {
                 p.goalRight = points[i + 1];
                 p.height = PADDLE_HEIGHT;
                 p.length = PADDLE_LENGTH;
-                p.paddle = CreatePaddle(p);
+                p.playerLeft = p.goalLeft + (goal.transform.forward * PADDLE_DISTANCE);
+                p.playerRight = p.goalRight + (goal.transform.forward * PADDLE_DISTANCE);
+                p.paddle = CreatePaddle("Paddle for " + p.playerid, goal.transform.rotation, p.playerLeft, p.playerRight);
                 goal.name = p.playerid;
             }
             else
@@ -327,13 +327,14 @@ public class PongCoordinator : MonoBehaviour {
 
     #region utilities
 
-    private GameObject CreatePaddle(PongPlayer p)
+    private GameObject CreatePaddle(string name, Quaternion rotation, Vector3 left, Vector3 right)
     {
         GameObject pad = Instantiate<GameObject>(PrefabPaddle);
-        pad.name = "Paddle for " + p.playerid;
+        pad.name = name;
+        pad.transform.rotation = rotation;
         PaddleController ctrl = pad.GetComponent<PaddleController>();
-        ctrl.left = p.goalLeft;
-        ctrl.right = p.goalRight;
+        ctrl.left = left;
+        ctrl.right = right;
 
         return pad;
     }
