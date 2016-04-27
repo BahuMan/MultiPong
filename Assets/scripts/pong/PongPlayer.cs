@@ -52,9 +52,15 @@ public class PongPlayer
         length = Convert.ToSingle((double)playerinfo[FIELD_PADDLELENGTH]);
     }
 
+
     public string toJSON()
     {
         StringBuilder sb = new StringBuilder();
+        return toJSON().ToString();
+    }
+
+    public StringBuilder toJSON(StringBuilder sb)
+    {
         sb.Append("{");
         sb.Append("\"").Append(FIELD_PLAYERID).Append("\": \"").Append(playerid).Append("\"");
         sb.Append("\"").Append(FIELD_GOALLEFT).Append("\":");
@@ -69,7 +75,7 @@ public class PongPlayer
         sb.Append("\"").Append(FIELD_PADDLEHEIGHT).Append("\": ").Append(height).Append("");
         sb.Append("}");
 
-        return sb.ToString();
+        return sb;
     }
 }
 

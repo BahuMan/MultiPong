@@ -69,14 +69,11 @@ class PongSerializer
         foreach (PongPlayer p in playerInfo.Values)
         {
             sb.AppendLine();
-            sb.Append("{\"").Append(PongPlayer.FIELD_PLAYERID).Append("\":\"").Append(p.playerid).Append("\", \"");
-            sb.Append(PongPlayer.FIELD_GOALLEFT).Append("\":"); forVector(sb, p.goalLeft).Append(", \"");
-            sb.Append(PongPlayer.FIELD_GOALRIGHT).Append("\":"); forVector(sb, p.goalRight).Append(", \"");
-            sb.Append(PongPlayer.FIELD_PADDLEHEIGHT).Append("\":").Append(p.height).Append(", \"");
-            sb.Append(PongPlayer.FIELD_PADDLELENGTH).Append("\":").Append(p.length).Append("}");
+            sb = p.toJSON(sb);
+            sb.Append(", ");
         }
-        sb.Append("]");
-        sb.Append("}");
+        sb.Length -= 2; //remove the last comma
+        sb.Append("]}");
         return sb.ToString();
     }
 }
