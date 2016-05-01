@@ -41,21 +41,21 @@ public class DrawGrid : MonoBehaviour {
 	
 	// Update is called once per frame
 	void OnPostRender () {
-        //Debug.Log("drawing line");
-        lineColor.SetPass(0);
-        GL.PushMatrix();
-        GL.LoadProjectionMatrix(cam.projectionMatrix);
-        GL.Begin(GL.LINES);
-        for (float x=-nrLines; x<nrLines; x+= 1f)
-        {
-            //Debug.DrawLine(new Vector3(x, 0f, -nrLines), new Vector3(x, 0f, nrLines), lineColor.color);
-            //Debug.DrawLine(new Vector3(-nrLines, 0f, x), new Vector3(nrLines, 0f, x), lineColor.color);
-            GL.Vertex3(x, 0f, -nrLines);
-            GL.Vertex3(x, 0f, nrLines);
-            GL.Vertex3(-nrLines, 0f, x);
-            GL.Vertex3(nrLines, 0f, x);
-        }
-        GL.PopMatrix();
+        ////Debug.Log("drawing line");
+        //lineColor.SetPass(0);
+        //GL.PushMatrix();
+        //GL.LoadProjectionMatrix(cam.projectionMatrix);
+        //GL.Begin(GL.LINES);
+        //for (float x=-nrLines; x<nrLines; x+= 1f)
+        //{
+        //    //Debug.DrawLine(new Vector3(x, 0f, -nrLines), new Vector3(x, 0f, nrLines), lineColor.color);
+        //    //Debug.DrawLine(new Vector3(-nrLines, 0f, x), new Vector3(nrLines, 0f, x), lineColor.color);
+        //    GL.Vertex3(x, 0f, -nrLines);
+        //    GL.Vertex3(x, 0f, nrLines);
+        //    GL.Vertex3(-nrLines, 0f, x);
+        //    GL.Vertex3(nrLines, 0f, x);
+        //}
+        //GL.PopMatrix();
 
     }
 }

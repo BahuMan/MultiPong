@@ -272,11 +272,20 @@ public class PongCoordinator : MonoBehaviour {
 
     private void UpdateHostWaiting()
     {
-        //while waiting, do nothing until fire is pressed
-        if (!Input.GetButton("Fire1")) return;
+        if (Input.GetButton("Fire1"))
+        {
+            if (playerInfo.Count > 1)
+            {
+                //if host presses fire, init the play field:
+                StartNewGame();
+            }
+            else
+            {
+                Debug.Log("Fire pressed, but not enough players joined.");
+                chatWindowController.addLine("server", "Fire pressed, but not enough players joined.");
+            }
+        }
 
-        //if host presses fire, init the play field:
-        StartNewGame();
     }
 
     private void StartNewGame()

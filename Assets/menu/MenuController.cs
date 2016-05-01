@@ -4,6 +4,7 @@ using UnityEngine.UI;
 public class MenuController : MonoBehaviour {
 
     public GameObject totalMenu; //use this to make everything disappear
+    public InputField playerNameInput;
     public Text joinOrHostDropDown;
     public Text addressInput; //for joining games, this input will contain the address. For local hosting, this should display the local IP address
     public float menuspeed = 0.5f;
@@ -19,6 +20,8 @@ public class MenuController : MonoBehaviour {
 
         GameObject PongController = GameObject.FindGameObjectWithTag("GameController");
         coordinator = PongController.GetComponent<PongCoordinator>();
+
+        playerNameInput.onEndEdit.AddListener(PlayerNameChanged);
 
         addressInput.text = "ws://" + Network.player.ipAddress + ":8080";
 
@@ -58,6 +61,12 @@ public class MenuController : MonoBehaviour {
             //previousAddress = addressInput.text;
             //addressInput.text = "local IP = " + Network.player.ipAddress;
         }
+    }
+
+    public void PlayerNameChanged(string newPlayerName)
+    {
+        Debug.Log("Local player is now known as " + newPlayerName);
+        coordinator.localPlayerName = newPlayerName;
     }
 
     public void GOClicked()
