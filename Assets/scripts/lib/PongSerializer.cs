@@ -57,11 +57,6 @@ class PongSerializer
         return "{\"type\":\"" + PongCoordinator.TYPE_JOIN + "\", \"" + PongPlayer.FIELD_PLAYERID + "\":\"" + name + "\"}";
     }
 
-    public static string forWall(GameObject wall, Vector3 start, Vector3 end)
-    {
-        return "{\"type\":\"" + PongCoordinator.TYPE_WALL + "\"}";
-    }
-
     public static string forGameSetup(Dictionary<string, PongPlayer> playerInfo)
     {
         StringBuilder sb = new StringBuilder("{\"type\":\"").Append(PongCoordinator.TYPE_SETUP_GAME).Append("\", ");
@@ -75,5 +70,34 @@ class PongSerializer
         sb.Length -= 2; //remove the last comma
         sb.Append("]}");
         return sb.ToString();
+    }
+
+    public static string forBallMove(PongBall ball)
+    {
+        StringBuilder sb = new StringBuilder("{\"type\":\"").Append(PongCoordinator.TYPE_BALL_MOVE).Append("\", ");
+        sb.Append("\"").Append(PongBall.FIELD_BALLID).Append("\": \"").Append(ball.ballid).Append("\"");
+        sb.Append("\"").Append(PongBall.FIELD_POSITION).Append("\":");
+        PongSerializer.forVector(sb, ball.position);
+        sb.Append("\"").Append(PongBall.FIELD_VELOCITY).Append("\":");
+        PongSerializer.forVector(sb, ball.velocity);
+        sb.Append("\"").Append(PongBall.FIELD_DIAMETER).Append("\": ").Append(ball.diameter).Append(",");
+        sb.Append("}");
+
+        return sb.ToString();
+    }
+
+    public static PongBall updateFromJSON(PongBall pongBall, Hashtable BallInfo)
+    {
+        pongBall.ballid = (string)BallInfo[PongBall.FIELD_BALLID];
+        pongBall.actualBall.name = pongBall.ballid;
+
+        Hashtable vect = (Hashtable)BallInfo[PongBall.FIELD_POSITION];
+        pongBall.position = PongSerializer.toVector(vect);
+        pongBall.actualBall.transform.position = pongBall.position;
+
+        vect = (Hashtable)BallInfo[PongBall.FIELD_VELOCITY];
+        pongBall.velocity = PongSerializer.toVector(vect);
+        pongBall.actualBall.GetComponent<Rigidbody>().velocity = pongBall.velocity;
+        return pongBall;
     }
 }

@@ -10,48 +10,44 @@ public class PongBall
     public Vector3 velocity;
     public float diameter;
 
+    public GameObject actualBall;
+
     public const string FIELD_BALLID = "BallID";
     public const string FIELD_POSITION = "Position";
     public const string FIELD_VELOCITY = "Velocity";
     public const string FIELD_DIAMETER = "Diameter";
 
-    public PongBall()
+    public PongBall(GameObject UnityBall)
     {
-
+        this.actualBall = UnityBall;
+        this.ballid = actualBall.name;
+        this.position = actualBall.transform.position;
+        this.velocity = actualBall.GetComponent<Rigidbody>().velocity;
     }
 
-    public PongBall(Hashtable BallInfo)
+    public PongBall(GameObject UnityBall,  Hashtable BallInfo)
     {
+        this.actualBall = UnityBall;
         ballid = (string)BallInfo[FIELD_BALLID];
+        this.actualBall.name = ballid;
 
         Hashtable vect = (Hashtable)BallInfo[FIELD_POSITION];
         position = PongSerializer.toVector(vect);
-        //position = new Vector2(Convert.ToSingle((double)vect["x"]), Convert.ToSingle((double)vect["y"]));
+        actualBall.transform.position = position;
 
         vect = (Hashtable)BallInfo[FIELD_VELOCITY];
         velocity = PongSerializer.toVector(vect);
-        //velocity = new Vector2(Convert.ToSingle((double)vect["x"]), Convert.ToSingle((double)vect["y"]));
+        actualBall.GetComponent<Rigidbody>().velocity = velocity;
 
         diameter = Convert.ToSingle((double)BallInfo[FIELD_DIAMETER]);
+
     }
 
-    public string toJSON()
+    public PongBall UpdateFromUnity()
     {
-        StringBuilder sb = new StringBuilder();
-        sb.Append("{");
-        sb.Append("\"").Append(FIELD_BALLID).Append("\": \"").Append(ballid).Append("\"");
-        sb.Append("\"").Append(FIELD_POSITION).Append("\":");
-            PongSerializer.forVector(sb, position);
-            //sb.Append("{\"x\": ").Append(position.x).Append(",");
-            //sb.Append("\"y\": ").Append(position.y).Append("}");
-        sb.Append("\"").Append(FIELD_VELOCITY).Append("\":");
-            PongSerializer.forVector(sb, velocity);
-            //sb.Append("{\"x\": ").Append(velocity.x).Append(",");
-            //sb.Append("\"y\": ").Append(velocity.y).Append("}");
-        sb.Append("\"").Append(FIELD_DIAMETER).Append("\": ").Append(diameter).Append(",");
-        sb.Append("}");
-
-        return sb.ToString();
+        this.position = actualBall.transform.position;
+        this.velocity = actualBall.GetComponent<Rigidbody>().velocity;
+        return this;
     }
 
 }

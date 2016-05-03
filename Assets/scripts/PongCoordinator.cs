@@ -14,7 +14,8 @@ public class PongCoordinator : MonoBehaviour {
     public GameObject PrefabWall;
     public GameObject PrefabGoal;
     public GameObject PrefabPaddle;
-    public Rigidbody ball;
+    public GameObject PrefabBall;
+
 
     public const float PADDLE_DISTANCE = 1.0f;
     public const float PADDLE_LENGTH = 3.0f;
@@ -23,8 +24,9 @@ public class PongCoordinator : MonoBehaviour {
     public const string TYPE_TYPE = "type";
     public const string TYPE_JOIN = "PlayerJoined";
     public const string TYPE_CHAT = "chat";
-    public const string TYPE_WALL = "createWall";
+    //public const string TYPE_WALL = "createWall";
     public const string TYPE_SETUP_GAME = "setupGame";
+    public const string TYPE_BALL_MOVE = "BallMove";
 
     public enum CoordinatorStatus { INIT, HOSTING_WAITING_FOR_PLAYERS, JOINING, HOSTING_STARTING, HOSTING_PLAYING, JOINED_WAITING, JOINED_STARTING, JOINED_PLAYING };
 
@@ -33,6 +35,7 @@ public class PongCoordinator : MonoBehaviour {
 
     private Dictionary<string, PongPlayer> playerInfo;
     private PongPlayer localPlayer = null;
+    private PongBall ball;
     private Hashtable parsedGameSetup;
     #endregion
 
@@ -87,6 +90,10 @@ public class PongCoordinator : MonoBehaviour {
         else if (msgType.Equals(TYPE_SETUP_GAME))
         {
             return ReceiveGameSetup(jsonhash);
+        }
+        else if (msgType.Equals(TYPE_BALL_MOVE))
+        {
+            return ReceiveBallMove(jsonhash);
         }
         return false;
     }
@@ -166,6 +173,19 @@ public class PongCoordinator : MonoBehaviour {
         chatWindowController.addLine((string)chat["from"], (string)chat["msg"]);
     }
 
+    private bool ReceiveBallMove(Hashtable ballmove)
+    {
+        if (status == CoordinatorStatus.HOSTING_PLAYING)
+        {
+            //server can ignore other people trying to move the ball
+        }
+        else if (status == CoordinatorStatus.JOINED_PLAYING)
+        {
+            
+        }
+        return true;
+    }
+
     private void checkJSON(string msg, object JSONParsed)
     {
         if (JSONParsed == null)
@@ -196,8 +216,7 @@ public class PongCoordinator : MonoBehaviour {
     {
         if (status == CoordinatorStatus.HOSTING_PLAYING)
         {
-            //disable temporarily to allow debugging of the JSON messages during playfield setup
-            //UpdateHostPlaying();
+            UpdateHostPlaying();
         }
         else if (status == CoordinatorStatus.HOSTING_WAITING_FOR_PLAYERS)
         {
@@ -229,7 +248,7 @@ public class PongCoordinator : MonoBehaviour {
             createWall(goal, newPlayer.goalLeft, newPlayer.goalRight);
             goal.name = "Goal for " + newPlayer.playerid;
 
-            newPlayer.paddle = CreatePaddle("Paddle for " + newPlayer.playerid, goal.transform.rotation, newPlayer.playerLeft, newPlayer.playerRight);
+            newPlayer.paddle = CreatePaddle(newPlayer.playerid, goal.transform.rotation, newPlayer.playerLeft, newPlayer.playerRight);
             //@TODO: for local paddle, bind keys to the newly instantiated paddle
             this.playerInfo.Add(newPlayer.playerid, newPlayer);
             //@TODO: link goal to correct user, for points and awards
@@ -246,6 +265,11 @@ public class PongCoordinator : MonoBehaviour {
         GameObject lastwall = Instantiate<GameObject>(PrefabWall);
         createWall(lastwall, previousPlayer.goalRight, PongSerializer.toVector((Hashtable) ((Hashtable)players[0])[PongPlayer.FIELD_GOALLEFT]));
 
+        //now let's play ball!
+        GameObject ballobject = Instantiate<GameObject>(PrefabBall);
+        ballobject.name = "PongTestBall";
+        this.ball = new PongBall(ballobject);
+
         //next frame, we can start playing!
         status = CoordinatorStatus.JOINED_PLAYING;
     }
@@ -261,18 +285,18 @@ public class PongCoordinator : MonoBehaviour {
         //@TODO: process all player updates from websockets
 
         //@TODO: loop balls and broadcast all ball positions
-        this.pongWebSockets.wsMessage(PongSerializer.forGameObject(this.ball.gameObject));
+        this.pongWebSockets.wsMessage(PongSerializer.forBallMove(this.ball.UpdateFromUnity()));
 
-        //broadcast all player positions
-        foreach (PongPlayer p in this.playerInfo.Values)
-        {
-            this.pongWebSockets.wsMessage(PongSerializer.forGameObject(p.paddle));
-        }
+        //broadcast all player positions (temporarily commented out)
+        //foreach (PongPlayer p in this.playerInfo.Values)
+        //{
+        //    this.pongWebSockets.wsMessage(PongSerializer.forGameObject(p.paddle));
+        //}
     }
 
     private void UpdateHostWaiting()
     {
-        if (Input.GetButton("Fire1"))
+        if (Input.GetButtonDown("Fire1"))
         {
             if (playerInfo.Count > 1)
             {
@@ -295,9 +319,6 @@ public class PongCoordinator : MonoBehaviour {
         GameObject wall;
         GameObject goal;
 
-        //@TODO: initialize & position balls & players
-        this.ball.name = "PongTestBall";
-        //this.localPlayer.paddle = Instantiate<GameObject>(PrefabPadle);
 
         var playerEnum = this.playerInfo.GetEnumerator();
         for (int i = 0; i < points.Length - 2; i += 2)
@@ -317,7 +338,7 @@ public class PongCoordinator : MonoBehaviour {
                 p.length = PADDLE_LENGTH;
                 p.playerLeft = p.goalLeft + (goal.transform.forward * PADDLE_DISTANCE);
                 p.playerRight = p.goalRight + (goal.transform.forward * PADDLE_DISTANCE);
-                p.paddle = CreatePaddle("Paddle for " + p.playerid, goal.transform.rotation, p.playerLeft, p.playerRight);
+                p.paddle = CreatePaddle(p.playerid, goal.transform.rotation, p.playerLeft, p.playerRight);
                 goal.name = p.playerid;
             }
             else
@@ -327,7 +348,10 @@ public class PongCoordinator : MonoBehaviour {
 
         }
 
-        this.ball.transform.position = new Vector3(0.0f, 0.0f, 1.0f);
+        //now let's play ball!
+        GameObject ballobject = Instantiate<GameObject>(PrefabBall);
+        ballobject.name = "PongTestBall";
+        this.ball = new PongBall(ballobject);
 
         SendGameSetup(this.playerInfo);
         status = CoordinatorStatus.HOSTING_PLAYING;
@@ -336,14 +360,22 @@ public class PongCoordinator : MonoBehaviour {
 
     #region utilities
 
-    private GameObject CreatePaddle(string name, Quaternion rotation, Vector3 left, Vector3 right)
+    private GameObject CreatePaddle(string playerName, Quaternion rotation, Vector3 left, Vector3 right)
     {
         GameObject pad = Instantiate<GameObject>(PrefabPaddle);
-        pad.name = name;
+        pad.name = "Paddle for " + playerName;
         pad.transform.rotation = rotation;
         PaddleController ctrl = pad.GetComponent<PaddleController>();
         ctrl.left = left;
         ctrl.right = right;
+        if (playerName == this.localPlayerName)
+        {
+            ctrl.listenToKeyboard = true;
+        }
+        else
+        {
+            ctrl.listenToKeyboard = false;
+        }
 
         return pad;
     }
