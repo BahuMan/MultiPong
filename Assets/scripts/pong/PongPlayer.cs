@@ -56,7 +56,7 @@ public class PongPlayer
     public string toJSON()
     {
         StringBuilder sb = new StringBuilder();
-        return toJSON().ToString();
+        return toJSON(sb).ToString();
     }
 
     public StringBuilder toJSON(StringBuilder sb)

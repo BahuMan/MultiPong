@@ -76,7 +76,7 @@ public class PongCoordinator : MonoBehaviour {
 
         Hashtable jsonhash = (Hashtable)JSONParsed;
         string msgType = (string) jsonhash[TYPE_TYPE];
-        Debug.Log("PongCoordinator received msg='" + msgType + "'");
+        //Debug.Log("PongCoordinator received msg='" + msgType + "'");
         if (msgType.Equals(TYPE_JOIN))
         {
             ReceivePlayerJoined(jsonhash);
@@ -181,7 +181,7 @@ public class PongCoordinator : MonoBehaviour {
         }
         else if (status == CoordinatorStatus.JOINED_PLAYING)
         {
-            
+            PongSerializer.updateFromJSON(this.ball, ballmove);
         }
         return true;
     }
@@ -205,11 +205,9 @@ public class PongCoordinator : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-
-
         pongWebSockets = new PongWebSockets();
         pongWebSockets.wsMessageArrived += PongWebSockets_wsMessageArrived;
-
+        Application.runInBackground = true;
     }
 
     void FixedUpdate()
@@ -268,7 +266,7 @@ public class PongCoordinator : MonoBehaviour {
         //now let's play ball!
         GameObject ballobject = Instantiate<GameObject>(PrefabBall);
         ballobject.name = "PongTestBall";
-        this.ball = new PongBall(ballobject);
+        this.ball = new PongBall(ballobject.GetComponent<Rigidbody>());
 
         //next frame, we can start playing!
         status = CoordinatorStatus.JOINED_PLAYING;
@@ -277,7 +275,7 @@ public class PongCoordinator : MonoBehaviour {
 
     private void UpdateJoinedPlaying()
     {
-
+        this.ball.UpdateToUnity();
     }
 
     private void UpdateHostPlaying()
@@ -351,7 +349,7 @@ public class PongCoordinator : MonoBehaviour {
         //now let's play ball!
         GameObject ballobject = Instantiate<GameObject>(PrefabBall);
         ballobject.name = "PongTestBall";
-        this.ball = new PongBall(ballobject);
+        this.ball = new PongBall(ballobject.GetComponent<Rigidbody>());
 
         SendGameSetup(this.playerInfo);
         status = CoordinatorStatus.HOSTING_PLAYING;

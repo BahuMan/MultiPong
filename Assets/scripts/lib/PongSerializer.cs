@@ -89,15 +89,12 @@ class PongSerializer
     public static PongBall updateFromJSON(PongBall pongBall, Hashtable BallInfo)
     {
         pongBall.ballid = (string)BallInfo[PongBall.FIELD_BALLID];
-        pongBall.actualBall.name = pongBall.ballid;
 
         Hashtable vect = (Hashtable)BallInfo[PongBall.FIELD_POSITION];
         pongBall.position = PongSerializer.toVector(vect);
-        pongBall.actualBall.transform.position = pongBall.position;
 
         vect = (Hashtable)BallInfo[PongBall.FIELD_VELOCITY];
         pongBall.velocity = PongSerializer.toVector(vect);
-        pongBall.actualBall.GetComponent<Rigidbody>().velocity = pongBall.velocity;
         return pongBall;
     }
 }

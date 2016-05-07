@@ -10,22 +10,22 @@ public class PongBall
     public Vector3 velocity;
     public float diameter;
 
-    public GameObject actualBall;
+    public Rigidbody actualBall;
 
     public const string FIELD_BALLID = "BallID";
     public const string FIELD_POSITION = "Position";
     public const string FIELD_VELOCITY = "Velocity";
     public const string FIELD_DIAMETER = "Diameter";
 
-    public PongBall(GameObject UnityBall)
+    public PongBall(Rigidbody UnityBall)
     {
         this.actualBall = UnityBall;
         this.ballid = actualBall.name;
-        this.position = actualBall.transform.position;
-        this.velocity = actualBall.GetComponent<Rigidbody>().velocity;
+        this.position = actualBall.position;
+        this.velocity = actualBall.velocity;
     }
 
-    public PongBall(GameObject UnityBall,  Hashtable BallInfo)
+    public PongBall(Rigidbody UnityBall,  Hashtable BallInfo)
     {
         this.actualBall = UnityBall;
         ballid = (string)BallInfo[FIELD_BALLID];
@@ -43,6 +43,9 @@ public class PongBall
 
     }
 
+    /*
+     * This method should be called inside the Unity Update() or FixedUpdate()
+     */
     public PongBall UpdateFromUnity()
     {
         this.position = actualBall.transform.position;
@@ -50,4 +53,13 @@ public class PongBall
         return this;
     }
 
+    /*
+     * This method should be called inside the Unity Update() or FixedUpdate()
+     */
+    public PongBall UpdateToUnity()
+    {
+        actualBall.MovePosition(position);
+        actualBall.velocity = velocity;
+        return this;
+    }
 }
