@@ -15,15 +15,26 @@ public class PaddleController : MonoBehaviour {
 	void Start () {
         //move paddle to the middle
         curPos = 0.5f;
-        transform.position = left + ((right - left) / 2f);
+        transform.position = left + ((right - left) * curPos);
 	}
 	
 	// Update is called once per frame
 	void Update () {
-        if (!listenToKeyboard) return;
+        if (!listenToKeyboard)
+        {
+            curPos = Mathf.Clamp01(curPos + movementSpeed * Input.GetAxis("Horizontal"));
+        }
 
-        float newPos = Mathf.Clamp01(curPos + movementSpeed * Input.GetAxis("Horizontal"));
-        transform.position = Vector3.Lerp(left, right, newPos);
-        curPos = newPos;
+        transform.position = Vector3.Lerp(left, right, curPos);
 	}
+
+    public void setCurPos(float newPos)
+    {
+        curPos = newPos;
+    }
+
+    public float getCurPos()
+    {
+        return curPos;
+    }
 }

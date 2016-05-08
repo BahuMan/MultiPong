@@ -34,11 +34,12 @@ namespace MultiPong.Unittest
             ball1.position = new Vector2(1f, 2f);
             ball1.velocity = new Vector2(3f, 4f);
             ball1.diameter = 5f;
-            string msg = ball1.toJSON();
+            string msg = PongSerializer.forBallMove(ball1);
             object boe = JSON.JsonDecode(msg);
 
-            PongBall second = new PongBall((Hashtable)boe);
-            string msg2 = second.toJSON();
+            PongBall second = new PongBall();
+            second = PongSerializer.fromBallMove(second, (Hashtable) boe);
+            string msg2 = PongSerializer.forBallMove(second);
 
             Assert.AreEqual(msg, msg2);
         }

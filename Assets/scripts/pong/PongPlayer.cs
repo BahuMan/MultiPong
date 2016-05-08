@@ -14,6 +14,9 @@ public class PongPlayer
     public float length;
     public float height;
 
+    public float position; //a number between 0 and 1, with 0 representing left-most position
+    public float velocity; //units per second the paddle is moving (negative means move to the left)
+
     //this gameobject is not serialized into the JSON and should be recreated from above parameters:
     public GameObject paddle;
 
@@ -26,20 +29,22 @@ public class PongPlayer
     public const string FIELD_PLAYERRIGHT = "PlayerRight";
     public const string FIELD_PADDLELENGTH = "PaddleLength";
     public const string FIELD_PADDLEHEIGHT = "PaddleHeight";
+    public const string FIELD_POSITION = "PaddlePosition";
+    public const string FIELD_VELOCITY = "PaddleVelocity";
 
     public PongPlayer(string id)
     {
         playerid = id;
     }
 
-    public static PongPlayer fromJSON(Hashtable playerinfo)
-    {
-        return new PongPlayer(playerinfo);
-    }
-
     public PongPlayer(Hashtable playerinfo)
     {
-        playerid = (string) playerinfo[FIELD_PLAYERID];
+        fromJSON(playerinfo);
+    }
+
+    public PongPlayer fromJSON(Hashtable playerinfo)
+    {
+        playerid = (string)playerinfo[FIELD_PLAYERID];
         Hashtable vect = (Hashtable)playerinfo[FIELD_GOALLEFT];
         goalLeft = PongSerializer.toVector(vect);
         vect = (Hashtable)playerinfo[FIELD_GOALRIGHT];
@@ -50,8 +55,9 @@ public class PongPlayer
         playerRight = PongSerializer.toVector(vect);
         height = Convert.ToSingle((double)playerinfo[FIELD_PADDLEHEIGHT]);
         length = Convert.ToSingle((double)playerinfo[FIELD_PADDLELENGTH]);
-    }
 
+        return this;
+    }
 
     public string toJSON()
     {
@@ -76,6 +82,20 @@ public class PongPlayer
         sb.Append("}");
 
         return sb;
+    }
+
+    public PongPlayer UpdateFromUnity()
+    {
+        //@TODO - ugly hack; I should keep proper velocity and interpolate in frames where I don't have a network update
+        this.velocity = paddle.GetComponent<PaddleController>().getCurPos() - this.position;
+        this.position = paddle.GetComponent<PaddleController>().getCurPos();
+        return this;
+    }
+
+    public PongPlayer UpdateToUnity()
+    {
+        paddle.GetComponent<PaddleController>().setCurPos(this.position);
+        return this;
     }
 }
 

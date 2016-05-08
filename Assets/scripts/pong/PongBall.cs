@@ -17,6 +17,13 @@ public class PongBall
     public const string FIELD_VELOCITY = "Velocity";
     public const string FIELD_DIAMETER = "Diameter";
 
+    /**
+     * this constructor should only be used as a dummy for the unittests
+     */
+    public PongBall()
+    {
+    }
+
     public PongBall(Rigidbody UnityBall)
     {
         this.actualBall = UnityBall;

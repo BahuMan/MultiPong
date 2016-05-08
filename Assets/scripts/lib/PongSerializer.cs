@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 
-class PongSerializer
+public class PongSerializer
 {
     public const float SCALE = 100f;
     /**
@@ -86,7 +86,7 @@ class PongSerializer
         return sb.ToString();
     }
 
-    public static PongBall updateFromJSON(PongBall pongBall, Hashtable BallInfo)
+    public static PongBall fromBallMove(PongBall pongBall, Hashtable BallInfo)
     {
         pongBall.ballid = (string)BallInfo[PongBall.FIELD_BALLID];
 
@@ -95,6 +95,27 @@ class PongSerializer
 
         vect = (Hashtable)BallInfo[PongBall.FIELD_VELOCITY];
         pongBall.velocity = PongSerializer.toVector(vect);
+
+        pongBall.diameter = Convert.ToSingle((double)BallInfo[PongBall.FIELD_DIAMETER]);
+
         return pongBall;
+    }
+
+    public static string forPlayerMove(PongPlayer player)
+    {
+        StringBuilder sb = new StringBuilder("{\"type\":\"").Append(PongCoordinator.TYPE_PLAYER_MOVE).Append("\", ");
+        sb.Append("\"").Append(PongPlayer.FIELD_PLAYERID).Append("\": \"").Append(player.playerid).Append("\"");
+        sb.Append("\"").Append(PongPlayer.FIELD_POSITION).Append("\":").Append(player.position).Append(", ");
+        sb.Append("\"").Append(PongPlayer.FIELD_VELOCITY).Append("\":").Append(player.velocity);
+        sb.Append("}");
+
+        return sb.ToString();
+    }
+
+    public static PongPlayer fromPlayerMove(PongPlayer player, Hashtable playerMove)
+    {
+        player.position = Convert.ToSingle((double)playerMove[PongPlayer.FIELD_POSITION]);
+        player.velocity = Convert.ToSingle((double)playerMove[PongPlayer.FIELD_VELOCITY]);
+        return player;
     }
 }

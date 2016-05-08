@@ -27,6 +27,7 @@ public class PongCoordinator : MonoBehaviour {
     //public const string TYPE_WALL = "createWall";
     public const string TYPE_SETUP_GAME = "setupGame";
     public const string TYPE_BALL_MOVE = "BallMove";
+    public const string TYPE_PLAYER_MOVE = "PlayerMove";
 
     public enum CoordinatorStatus { INIT, HOSTING_WAITING_FOR_PLAYERS, JOINING, HOSTING_STARTING, HOSTING_PLAYING, JOINED_WAITING, JOINED_STARTING, JOINED_PLAYING };
 
@@ -94,6 +95,10 @@ public class PongCoordinator : MonoBehaviour {
         else if (msgType.Equals(TYPE_BALL_MOVE))
         {
             return ReceiveBallMove(jsonhash);
+        }
+        else if (msgType.Equals(TYPE_PLAYER_MOVE))
+        {
+            return ReceivePlayerMove(jsonhash);
         }
         return false;
     }
@@ -181,9 +186,28 @@ public class PongCoordinator : MonoBehaviour {
         }
         else if (status == CoordinatorStatus.JOINED_PLAYING)
         {
-            PongSerializer.updateFromJSON(this.ball, ballmove);
+            PongSerializer.fromBallMove(this.ball, ballmove);
         }
         return true;
+    }
+
+    private bool ReceivePlayerMove(Hashtable playerMove)
+    {
+        string moveplayerid = (string)playerMove[PongPlayer.FIELD_PLAYERID];
+        if (moveplayerid == this.localPlayerName)
+        {
+            Debug.LogError("received network update for " + moveplayerid + " but this is the locally controlled player - discarding");
+            return false; //no network override for local player
+        }
+        PongPlayer movePlayer = this.playerInfo[moveplayerid];
+        PongSerializer.fromPlayerMove(movePlayer, playerMove);
+        //@TODO - I assume I don't need to put it back in the dictionary
+        return true;
+    }
+    
+    private void SendPlayerMove()
+    {
+        this.pongWebSockets.wsMessage(PongSerializer.forPlayerMove(this.localPlayer.UpdateFromUnity()));
     }
 
     private void checkJSON(string msg, object JSONParsed)
