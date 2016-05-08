@@ -191,6 +191,12 @@ public class PongCoordinator : MonoBehaviour {
         return true;
     }
 
+    private void SendBallMove()
+    {
+        //@TODO: loop balls and broadcast all ball positions
+        this.pongWebSockets.wsMessage(PongSerializer.forBallMove(this.ball.UpdateFromUnity()));
+    }
+
     private bool ReceivePlayerMove(Hashtable playerMove)
     {
         string moveplayerid = (string)playerMove[PongPlayer.FIELD_PLAYERID];
@@ -207,6 +213,7 @@ public class PongCoordinator : MonoBehaviour {
     
     private void SendPlayerMove()
     {
+        //I'm not sending the other player's positions, they should've been sent & processed already by all other players
         this.pongWebSockets.wsMessage(PongSerializer.forPlayerMove(this.localPlayer.UpdateFromUnity()));
     }
 
@@ -300,20 +307,28 @@ public class PongCoordinator : MonoBehaviour {
     private void UpdateJoinedPlaying()
     {
         this.ball.UpdateToUnity();
+        UpdateAllPlayersToUnity();
+    }
+    
+    private void UpdateAllPlayersToUnity()
+    {
+        foreach (PongPlayer p in this.playerInfo.Values)
+        {
+            //loop everything BUT the local player
+            if (this.localPlayerName != p.playerid)
+            {
+                p.UpdateToUnity();
+            }
+        }
     }
 
     private void UpdateHostPlaying()
     {
-        //@TODO: process all player updates from websockets
+        //process all other player's movements
+        UpdateAllPlayersToUnity();
+        SendPlayerMove();
+        SendBallMove();
 
-        //@TODO: loop balls and broadcast all ball positions
-        this.pongWebSockets.wsMessage(PongSerializer.forBallMove(this.ball.UpdateFromUnity()));
-
-        //broadcast all player positions (temporarily commented out)
-        //foreach (PongPlayer p in this.playerInfo.Values)
-        //{
-        //    this.pongWebSockets.wsMessage(PongSerializer.forGameObject(p.paddle));
-        //}
     }
 
     private void UpdateHostWaiting()
