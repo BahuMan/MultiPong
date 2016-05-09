@@ -1,5 +1,5 @@
 # MultiPong
-pong multiplayer based on [game-of-everything protocol](https://github.com/CoderDojo/cp-zen-platform.git)
+pong multiplayer based on [game-of-everything protocol](https://github.com/Squarific/Game-Of-Everything)
 
 ##Prerequisite
 
