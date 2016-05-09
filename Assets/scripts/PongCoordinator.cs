@@ -202,8 +202,8 @@ public class PongCoordinator : MonoBehaviour {
         string moveplayerid = (string)playerMove[PongPlayer.FIELD_PLAYERID];
         if (moveplayerid == this.localPlayerName)
         {
-            Debug.LogError("received network update for " + moveplayerid + " but this is the locally controlled player - discarding");
-            return false; //no network override for local player
+            //Debug.LogError("received network update for " + moveplayerid + " but this is the locally controlled player - discarding");
+            return true; //no network override for local player
         }
         PongPlayer movePlayer = this.playerInfo[moveplayerid];
         PongSerializer.fromPlayerMove(movePlayer, playerMove);
@@ -213,7 +213,6 @@ public class PongCoordinator : MonoBehaviour {
     
     private void SendPlayerMove()
     {
-        //I'm not sending the other player's positions, they should've been sent & processed already by all other players
         this.pongWebSockets.wsMessage(PongSerializer.forPlayerMove(this.localPlayer.UpdateFromUnity()));
     }
 
@@ -290,6 +289,8 @@ public class PongCoordinator : MonoBehaviour {
             previousPlayer = newPlayer;
         }
 
+        this.localPlayer = this.playerInfo[this.localPlayerName];
+
         //some ugly shenanigans to create the last wall (between first and last player)
         GameObject lastwall = Instantiate<GameObject>(PrefabWall);
         createWall(lastwall, previousPlayer.goalRight, PongSerializer.toVector((Hashtable) ((Hashtable)players[0])[PongPlayer.FIELD_GOALLEFT]));
@@ -306,6 +307,7 @@ public class PongCoordinator : MonoBehaviour {
 
     private void UpdateJoinedPlaying()
     {
+        SendPlayerMove();
         this.ball.UpdateToUnity();
         UpdateAllPlayersToUnity();
     }

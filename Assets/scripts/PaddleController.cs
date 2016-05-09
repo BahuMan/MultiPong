@@ -20,7 +20,7 @@ public class PaddleController : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-        if (!listenToKeyboard)
+        if (listenToKeyboard)
         {
             curPos = Mathf.Clamp01(curPos + movementSpeed * Input.GetAxis("Horizontal"));
         }
@@ -30,6 +30,7 @@ public class PaddleController : MonoBehaviour {
 
     public void setCurPos(float newPos)
     {
+        if (listenToKeyboard) throw new System.Exception("I shouldn't be updated like this when I'm listening to the keyboard");
         curPos = newPos;
     }
 

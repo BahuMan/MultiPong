@@ -86,9 +86,10 @@ public class PongPlayer
 
     public PongPlayer UpdateFromUnity()
     {
+        PaddleController ctrl = paddle.GetComponent<PaddleController>();
         //@TODO - ugly hack; I should keep proper velocity and interpolate in frames where I don't have a network update
-        this.velocity = paddle.GetComponent<PaddleController>().getCurPos() - this.position;
-        this.position = paddle.GetComponent<PaddleController>().getCurPos();
+        this.velocity = ctrl.getCurPos() - this.position;
+        this.position = ctrl.getCurPos();
         return this;
     }
 

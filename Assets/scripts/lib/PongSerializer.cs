@@ -104,7 +104,7 @@ public class PongSerializer
     public static string forPlayerMove(PongPlayer player)
     {
         StringBuilder sb = new StringBuilder("{\"type\":\"").Append(PongCoordinator.TYPE_PLAYER_MOVE).Append("\", ");
-        sb.Append("\"").Append(PongPlayer.FIELD_PLAYERID).Append("\": \"").Append(player.playerid).Append("\"");
+        sb.Append("\"").Append(PongPlayer.FIELD_PLAYERID).Append("\": \"").Append(player.playerid).Append("\", ");
         sb.Append("\"").Append(PongPlayer.FIELD_POSITION).Append("\":").Append(player.position).Append(", ");
         sb.Append("\"").Append(PongPlayer.FIELD_VELOCITY).Append("\":").Append(player.velocity);
         sb.Append("}");
