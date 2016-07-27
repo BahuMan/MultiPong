@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-public class MenuController : MonoBehaviour {
+public class MPMenuController : MonoBehaviour {
 
     public GameObject totalMenu; //use this to make everything disappear
     public InputField playerNameInput;
@@ -10,20 +10,13 @@ public class MenuController : MonoBehaviour {
     public float menuspeed = 0.5f;
     public bool hosting = false;
 
-    private PongCoordinator coordinator;
-
     void Start()
     {
         menuVisible = true;
         if (totalMenu != null) totalMenu.SetActive(true);
-        Debug.Log("Start: activated boolean");
 
-        GameObject PongController = GameObject.FindGameObjectWithTag("GameController");
-        coordinator = PongController.GetComponent<PongCoordinator>();
-
-        playerNameInput.onEndEdit.AddListener(PlayerNameChanged);
-
-        addressInput.text = "ws://" + Network.player.ipAddress + ":8080";
+        if (playerNameInput != null) playerNameInput.onEndEdit.AddListener(PlayerNameChanged);
+        if (addressInput != null) addressInput.text = "ws://" + Network.player.ipAddress + ":8080";
 
 
     }
@@ -66,23 +59,6 @@ public class MenuController : MonoBehaviour {
     public void PlayerNameChanged(string newPlayerName)
     {
         Debug.Log("Local player is now known as " + newPlayerName);
-        coordinator.localPlayerName = newPlayerName;
-    }
-
-    public void GOClicked()
-    {
-        menuVisible = false;
-        if (totalMenu != null) totalMenu.SetActive(false);
-        Debug.Log("GO clicked");
-
-        if (hosting)
-        {
-            coordinator.HostGame(addressInput.text);
-        }
-        else
-        {
-            coordinator.JoinGame(addressInput.text);
-        }
     }
 
 }

@@ -13,11 +13,10 @@ public class ChatWindowController : MonoBehaviour {
     private PongWebSockets webSockets;
 
     // Use this for initialization
-    void Start () {
+    void Awake()
+    {
         chatLines = new Queue<string>(maxChatLines);
         chatWindow = GetComponent<Text>();
-
-
     }
 
     /*
