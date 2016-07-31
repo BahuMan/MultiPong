@@ -41,20 +41,20 @@ public class MPPongCoordinator : NetworkBehaviour {
             this.ball = CreateBall();
         }
 
-        previousHandlerAddPlayer = NetworkServer.handlers[MsgType.AddPlayer];
-        NetworkServer.RegisterHandler(MsgType.AddPlayer, OnPlayerAdded);
+        //previousHandlerAddPlayer = NetworkServer.handlers[MsgType.AddPlayer];
+        //NetworkServer.RegisterHandler(MsgType.AddPlayer, OnPlayerAdded);
 
-        previousHandlerRemovePlayer = NetworkServer.handlers[MsgType.RemovePlayer];
-        NetworkServer.RegisterHandler(MsgType.RemovePlayer, OnPlayerRemoved);
+        //previousHandlerRemovePlayer = NetworkServer.handlers[MsgType.RemovePlayer];
+        //NetworkServer.RegisterHandler(MsgType.RemovePlayer, OnPlayerRemoved);
 
-        previousHandlerDisconnect = NetworkServer.handlers[MsgType.Disconnect];
-        NetworkServer.RegisterHandler(MsgType.RemovePlayer, OnDisconnect);
+        //previousHandlerDisconnect = NetworkServer.handlers[MsgType.Disconnect];
+        //NetworkServer.RegisterHandler(MsgType.RemovePlayer, OnDisconnect);
     }
 
     NetworkMessageDelegate previousHandlerAddPlayer;
     private void OnPlayerAdded(NetworkMessage netMsg)
     {
-        Debug.Log("Played added: " + netMsg.ToString());
+        Debug.Log("Player added: " + netMsg.ToString());
         if (previousHandlerAddPlayer != null) previousHandlerAddPlayer(netMsg);
     }
 
@@ -72,14 +72,31 @@ public class MPPongCoordinator : NetworkBehaviour {
         if (previousHandlerDisconnect != null) previousHandlerDisconnect(netMsg);
     }
 
+    public void OnPongDisconnected(MPPlayerController gone)
+    {
+        Debug.Log("Server received player disconnect");
+        this.PlayerList.Remove(gone);
+        this.ServerStartNewGame();
+    }
+
     // Update is called once per frame
     void Update () {
-	
+        if (Input.GetKeyDown(KeyCode.P)) DebugListAllPlayers();
 	}
+
+    private void DebugListAllPlayers()
+    {
+        foreach(MPPlayerController p in this.PlayerList)
+        {
+            chatWindowController.addLine("(debug)", "player ctrl id " + p.playerControllerId);
+            Debug.Log("player ctrl id " + p.playerControllerId);
+        }
+
+    }
 
     public void RegisterPlayer(MPPlayerController newPlayer)
     {
-        chatWindowController.addLine("(local)", "New player joined");
+        chatWindowController.addLine("(local)", "New player joined with player ctrl id " + newPlayer.playerControllerId);
         this.PlayerList.AddLast(newPlayer);
         if (isServer) ServerStartNewGame();
     }
