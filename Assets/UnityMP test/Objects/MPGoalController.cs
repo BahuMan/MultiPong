@@ -1,23 +1,20 @@
 ﻿using UnityEngine;
 using UnityEngine.Networking;
 
-[RequireComponent(typeof(Collider))]
-public class MPGoalController : NetworkBehaviour {
+class MPGoalController: NetworkBehaviour
+{
 
-    // Use this for initialization
-    void Start () {
-	
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
+    private MPPlayerController associatedPlayer;
 
-    void OnTriggerEnter(Collider col)
+    [Server]
+    public void setPlayer(MPPlayerController p)
     {
-        if (col.gameObject.tag != "ball") { Debug.Log("collision irrelevant for " + col.gameObject.name); return; }
-        Debug.Log("player lost!");
+        associatedPlayer = p;
     }
 
+    [Server]
+    public MPPlayerController getPlayer()
+    {
+        return associatedPlayer;
+    }
 }

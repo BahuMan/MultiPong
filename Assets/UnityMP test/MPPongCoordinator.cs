@@ -19,6 +19,9 @@ public class MPPongCoordinator : NetworkBehaviour {
     private List<GameObject> LevelList = new List<GameObject>();
     private GameObject ball;
 
+    //this will be set by the GUI and read by the local player object
+    public string LocalPlayerName;
+
     public struct MPPlayerInfo
     {
         public string playerid;
@@ -35,41 +38,6 @@ public class MPPongCoordinator : NetworkBehaviour {
     {
         PlayerList = new LinkedList<MPPlayerController>();
 
-        //now let's play ball!
-        if (this.ball == null)
-        {
-            this.ball = CreateBall();
-        }
-
-        //previousHandlerAddPlayer = NetworkServer.handlers[MsgType.AddPlayer];
-        //NetworkServer.RegisterHandler(MsgType.AddPlayer, OnPlayerAdded);
-
-        //previousHandlerRemovePlayer = NetworkServer.handlers[MsgType.RemovePlayer];
-        //NetworkServer.RegisterHandler(MsgType.RemovePlayer, OnPlayerRemoved);
-
-        //previousHandlerDisconnect = NetworkServer.handlers[MsgType.Disconnect];
-        //NetworkServer.RegisterHandler(MsgType.RemovePlayer, OnDisconnect);
-    }
-
-    NetworkMessageDelegate previousHandlerAddPlayer;
-    private void OnPlayerAdded(NetworkMessage netMsg)
-    {
-        Debug.Log("Player added: " + netMsg.ToString());
-        if (previousHandlerAddPlayer != null) previousHandlerAddPlayer(netMsg);
-    }
-
-    NetworkMessageDelegate previousHandlerRemovePlayer;
-    private void OnPlayerRemoved(NetworkMessage netMsg)
-    {
-        Debug.Log("Played removed: " + netMsg.ToString());
-        if (previousHandlerRemovePlayer != null) previousHandlerRemovePlayer(netMsg);
-    }
-
-    NetworkMessageDelegate previousHandlerDisconnect;
-    private void OnDisconnect(NetworkMessage netMsg)
-    {
-        Debug.Log("Disconnect: " + netMsg.ToString());
-        if (previousHandlerDisconnect != null) previousHandlerDisconnect(netMsg);
     }
 
     public void OnPongDisconnected(MPPlayerController gone)
@@ -92,6 +60,15 @@ public class MPPongCoordinator : NetworkBehaviour {
             Debug.Log("player ctrl id " + p.playerControllerId);
         }
 
+    }
+
+    public void PlayerGoalHit(MPPlayerController p)
+    {
+        p.score -= 1;
+        if (isServer)
+        {
+            this.ball.GetComponent<MPBallController>().Reset(new Vector3(0f,0f,0f), Quaternion.Euler(0f, Random.Range(0f, 360f), 0f));
+        }
     }
 
     public void RegisterPlayer(MPPlayerController newPlayer)
@@ -135,7 +112,8 @@ public class MPPongCoordinator : NetworkBehaviour {
                 gs.length = PADDLE_LENGTH;
                 gs.playerLeft = gs.goalLeft + (goal.transform.forward * PADDLE_DISTANCE);
                 gs.playerRight = gs.goalRight + (goal.transform.forward * PADDLE_DISTANCE);
-                goal.name = playerEnum.Current.playerName;
+                goal.name = "goal for " + playerEnum.Current.playerName;
+                goal.GetComponent<MPGoalController>().setPlayer(playerEnum.Current);
 
                 playerEnum.Current.RpcPrepareForNewGame(gs);
             }
@@ -151,19 +129,21 @@ public class MPPongCoordinator : NetworkBehaviour {
             this.ball.transform.position = new Vector3(0f, 0f, 0f);
             //this.ball.GetComponent<Rigidbody>().velocity =
         }
+        else
+        {
+            this.ball = CreateBall();
+        }
 
     }
 
+    [Server]
     private GameObject CreateBall()
     {
         GameObject ballobject = Instantiate<GameObject>(PrefabBall);
-        ballobject.transform.position = new Vector3(0f, 0f, 0f);
-        ballobject.transform.rotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
         ballobject.name = "PongTestBall";
         NetworkServer.Spawn(ballobject);
         return ballobject;
     }
-
 
     #region utilities
 
@@ -174,7 +154,7 @@ public class MPPongCoordinator : NetworkBehaviour {
 
         newWall.transform.position = (from + to) / 2f;
         newWall.transform.rotation = Quaternion.LookRotation(from - to) * Quaternion.AngleAxis(90f, newWall.transform.up);
-        newWall.name = from.ToString() + " - " + to.ToString();
+        newWall.name = "wall " + from.ToString() + " - " + to.ToString();
 
         SyncScale scr = newWall.GetComponent<SyncScale>();
         scr.scale = new Vector3(Vector3.Distance(from, to), 1f, 1f);

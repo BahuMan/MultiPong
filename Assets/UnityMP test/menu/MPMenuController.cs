@@ -1,8 +1,11 @@
 ﻿using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.UI;
 
 public class MPMenuController : MonoBehaviour {
 
+    public MPPongCoordinator thePongCoordinator;
+    public PongNetworkManager ThePongNetworkManager;
     public GameObject totalMenu; //use this to make everything disappear
     public InputField playerNameInput;
     public Text joinOrHostDropDown;
@@ -16,7 +19,7 @@ public class MPMenuController : MonoBehaviour {
         if (totalMenu != null) totalMenu.SetActive(true);
 
         if (playerNameInput != null) playerNameInput.onEndEdit.AddListener(PlayerNameChanged);
-        if (addressInput != null) addressInput.text = "ws://" + Network.player.ipAddress + ":8080";
+        if (addressInput != null) addressInput.text = "localhost";
 
 
     }
@@ -59,6 +62,30 @@ public class MPMenuController : MonoBehaviour {
     public void PlayerNameChanged(string newPlayerName)
     {
         Debug.Log("Local player is now known as " + newPlayerName);
+        thePongCoordinator.LocalPlayerName = newPlayerName;
     }
 
+    public void GOClicked()
+    {
+        //stop previous game:
+        if (NetworkServer.active || NetworkClient.active)
+        {
+            ThePongNetworkManager.StopHost();
+        }
+
+        ThePongNetworkManager.networkAddress = addressInput.text;
+        if (hosting)
+        {
+            ThePongNetworkManager.StartHost();
+        }
+        else
+        {
+            ThePongNetworkManager.StartClient();
+        }
+
+        //hide menu
+        menuVisible = false;
+        if (totalMenu != null) totalMenu.SetActive(false);
+
+    }
 }

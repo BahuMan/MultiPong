@@ -1,9 +1,8 @@
 ﻿using UnityEngine;
 using UnityEngine.Networking;
 
-class PongNetworkManager: NetworkManager
+public class PongNetworkManager: NetworkManager
 {
-
 
     public MPPongCoordinator PongCoordinator;
 
@@ -17,9 +16,14 @@ class PongNetworkManager: NetworkManager
         base.OnServerDisconnect(conn);
     }
 
-    public override void OnServerRemovePlayer(NetworkConnection conn, PlayerController player)
+    public override void OnServerConnect(NetworkConnection conn)
     {
-        Debug.Log("NetworkManager.OnServerRemovePlayer address=" + conn.address + ", playerctrl=" + player.playerControllerId);
-        base.OnServerRemovePlayer(conn, player);
+        Debug.Log("NetworkManager.OnServerConnect address=" + conn.address + " #players = " + conn.playerControllers.Count);
+        foreach (PlayerController pc in conn.playerControllers)
+        {
+            //PongCoordinator.OnPongDisconnected(pc.gameObject.GetComponent<MPPlayerController>());
+        }
+        base.OnServerConnect(conn);
     }
+
 }
